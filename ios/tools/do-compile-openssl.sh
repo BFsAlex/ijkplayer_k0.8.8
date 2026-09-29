@@ -55,6 +55,8 @@ if [ -z "$FF_ARCH" ]; then
     echo "You must specific an architecture 'armv7, armv7s, arm64, i386, x86_64, ...'.\n"
     exit 1
 fi
+FF_ARCH_TRIPLE=$FF_ARCH
+if [ "$FF_ARCH" = "arm64-sim" ]; then FF_ARCH_TRIPLE=arm64; fi
 
 
 FF_BUILD_ROOT=`pwd`
@@ -96,7 +98,7 @@ if [ "$FF_ARCH" = "i386" ]; then
 elif [ "$FF_ARCH" = "x86_64" ]; then
     FF_BUILD_NAME="openssl-x86_64"
     FF_XCRUN_PLATFORM="iPhoneSimulator"
-    FF_XCRUN_OSVERSION="-mios-simulator-version-min=7.0"
+    FF_XCRUN_OSVERSION="-mios-simulator-version-min=12.0"
     OPENSSL_CFG_FLAGS="darwin64-x86_64-cc $OPENSSL_CFG_FLAGS"
 elif [ "$FF_ARCH" = "armv7" ]; then
     FF_BUILD_NAME="openssl-armv7"
@@ -112,8 +114,15 @@ elif [ "$FF_ARCH" = "armv7s" ]; then
     OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
 elif [ "$FF_ARCH" = "arm64" ]; then
     FF_BUILD_NAME="openssl-arm64"
-    FF_XCRUN_OSVERSION="-miphoneos-version-min=7.0"
-    FF_XCODE_BITCODE="-fembed-bitcode"
+    FF_XCRUN_OSVERSION="-miphoneos-version-min=12.0"
+    FF_XCODE_BITCODE=
+    OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
+    FF_GASPP_EXPORT="GASPP_FIX_XCODE5=1"
+elif [ "$FF_ARCH" = "arm64-sim" ]; then
+    FF_BUILD_NAME="openssl-arm64-sim"
+    FF_XCRUN_PLATFORM="iPhoneSimulator"
+    FF_XCRUN_OSVERSION="-mios-simulator-version-min=12.0"
+    FF_XCODE_BITCODE=
     OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
     FF_GASPP_EXPORT="GASPP_FIX_XCODE5=1"
 else
@@ -145,7 +154,7 @@ FF_XCRUN_CC="xcrun -sdk $FF_XCRUN_SDK clang"
 export CROSS_TOP="$FF_XCRUN_SDK_PLATFORM_PATH/Developer"
 export CROSS_SDK=`echo ${FF_XCRUN_SDK_PATH/#$CROSS_TOP\/SDKs\//}`
 export BUILD_TOOL="$FF_XCRUN_DEVELOPER"
-export CC="$FF_XCRUN_CC -arch $FF_ARCH $FF_XCRUN_OSVERSION"
+export CC="$FF_XCRUN_CC -arch $FF_ARCH_TRIPLE $FF_XCRUN_OSVERSION"
 
 echo "build_source: $FF_BUILD_SOURCE"
 echo "build_prefix: $FF_BUILD_PREFIX"

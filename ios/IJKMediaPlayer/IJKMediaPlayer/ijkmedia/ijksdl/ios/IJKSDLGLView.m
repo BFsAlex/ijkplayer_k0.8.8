@@ -142,7 +142,16 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
 
 - (CAEAGLLayer *)eaglLayer
 {
-    return (CAEAGLLayer*) self.layer;
+    if ([NSThread isMainThread]) {
+        return (CAEAGLLayer*) self.layer;
+    } else {
+        __block CALayer  *layer;
+        __weak typeof(self) weakSelf = self;
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            layer = weakSelf.layer;
+        });
+        return (CAEAGLLayer*)layer;
+    }
 }
 
 - (BOOL)setupGL
@@ -197,23 +206,38 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
 
 - (BOOL)isApplicationActive
 {
-    switch (_applicationState) {
-        case IJKSDLGLViewApplicationForegroundState:
-            return YES;
-        case IJKSDLGLViewApplicationBackgroundState:
-            return NO;
-        default: {
-            UIApplicationState appState = [UIApplication sharedApplication].applicationState;
-            switch (appState) {
-                case UIApplicationStateActive:
-                    return YES;
-                case UIApplicationStateInactive:
-                case UIApplicationStateBackground:
-                default:
-                    return NO;
+    __block BOOL isActive;
+    
+    BOOL(^taskBlock)(void)  = ^ {
+        
+        switch (_applicationState) {
+            case IJKSDLGLViewApplicationForegroundState:
+                return YES;
+            case IJKSDLGLViewApplicationBackgroundState:
+                return NO;
+            default: {
+                UIApplicationState appState = [UIApplication sharedApplication].applicationState;
+                switch (appState) {
+                    case UIApplicationStateActive:
+                        return YES;
+                    case UIApplicationStateInactive:
+                    case UIApplicationStateBackground:
+                    default:
+                        return NO;
+                }
             }
         }
+    };
+    
+    if ([NSThread isMainThread]) {
+        isActive = taskBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            isActive = taskBlock();
+        });
     }
+    
+    return isActive;
 }
 
 - (void)dealloc
@@ -377,8 +401,18 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
         NSLog(@"IJKSDLGLView: renderbufferStorage fromDrawable\n");
         _isRenderBufferInvalidated = NO;
 
+        __block CALayer *layer;
+        if ([NSThread isMainThread]) {
+            layer = self.layer;
+        } else {
+            __weak typeof(self) weakSelf = self;
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                layer = weakSelf.layer;
+            });
+        }
+        
         glBindRenderbuffer(GL_RENDERBUFFER, _renderbuffer);
-        [_context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)self.layer];
+        [_context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)layer];
         glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &_backingWidth);
         glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &_backingHeight);
         IJK_GLES2_Renderer_setGravity(_renderer, _rendererGravity, _backingWidth, _backingHeight);
