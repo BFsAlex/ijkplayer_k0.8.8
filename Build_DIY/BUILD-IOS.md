@@ -1,6 +1,6 @@
-# iOS SDK 编译操作手册（branch_ArmAndSim）
+# iOS SDK 编译操作手册（branch_ArmAndSim__SSL）
 
-适用分支：`branch_ArmAndSim`（基线 ijkplayer k0.8.8 + Bilibili FFmpeg 3.4 fork + OpenSSL 1.0.2n）
+适用分支：`branch_ArmAndSim__SSL`（基线 ijkplayer k0.8.8 + Bilibili FFmpeg 3.4 fork + OpenSSL 1.0.2n）
 
 本手册记录从源码编译出 **真机 + 模拟器** 双 `IJKMediaFrameworkWithSSL` framework / xcframework 的完整流程。
 所有命令已在 Xcode 26.5 / macOS 26 (Apple Silicon) 上实机验证通过；Xcode 15 及以上均可照此操作。
@@ -57,7 +57,7 @@
 方式 A —— 从 GitHub 克隆（推荐）：
 
 ```bash
-git clone -b branch_ArmAndSim https://github.com/BFsAlex/ijkplayer_k0.8.8.git ijkplayer
+git clone -b branch_ArmAndSim__SSL https://github.com/BFsAlex/ijkplayer_k0.8.8.git ijkplayer
 cd ijkplayer
 ```
 
@@ -250,7 +250,7 @@ IJKFFMoviePlayerController *player =
 ## 9. 快速命令备忘（按序完整跑齐）
 
 ```bash
-git clone -b branch_ArmAndSim https://github.com/BFsAlex/ijkplayer_k0.8.8.git ijkplayer
+git clone -b branch_ArmAndSim__SSL https://github.com/BFsAlex/ijkplayer_k0.8.8.git ijkplayer
 cd ijkplayer
 ./init-ios.sh arm64 && ./init-ios.sh x86_64 && ./init-ios-openssl.sh
 cd ios && cp -Rp ffmpeg-arm64 ffmpeg-arm64-sim && cp -Rp openssl-arm64 openssl-arm64-sim
